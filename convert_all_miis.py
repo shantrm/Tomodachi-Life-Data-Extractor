@@ -14,12 +14,14 @@ from typing import Optional, Tuple
 # Add parent directory to path to import mii2studio modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "mii2studio"))
 
+
 def get_mii_offset(mii_index: int, region: str = "EU") -> int:
     """Get the offset for a Mii in the save file"""
     if region == "JP":
         return 0x1C40 + (mii_index * 0x590)
     else:
         return 0x1C70 + (mii_index * 0x660)
+
 
 def extract_mii_raw(save_file: str, mii_index: int, region: str = "EU") -> bytes:
     """Extract the raw 96-byte (0x60) Mii block from save file"""
@@ -33,6 +35,7 @@ def extract_mii_raw(save_file: str, mii_index: int, region: str = "EU") -> bytes
     
     mii_data = data[offset:offset + 0x60]
     return mii_data
+
 
 def convert_mii_to_studio(mii_data: bytes, output_file: str) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -78,6 +81,7 @@ def convert_mii_to_studio(mii_data: bytes, output_file: str) -> Tuple[Optional[s
         if temp_mii_file.exists():
             temp_mii_file.unlink()
 
+
 def download_image(url: str, output_path: Path) -> bool:
     """Download an image from URL and save to file"""
     try:
@@ -92,25 +96,41 @@ def download_image(url: str, output_path: Path) -> bool:
         print(f"    ✗ Failed to download {output_path.name}: {e}")
         return False
 
+
 def main():
+    script_dir = Path(__file__).parent
+
+    # Argument handling:
+    # - 0 args: auto-detect save file in ./SaveFile (fallback ../SaveFile), output to ./extracted_miis, region EU
+    # - 1+ args: keep backward compatibility (save_file, extracted_miis_folder, [region])
     if len(sys.argv) < 3:
-        print("Usage: python convert_all_miis.py <save_file> <extracted_miis_folder> [region]")
-        print("  save_file: Path to Tomodachi Life save file")
-        print("  extracted_miis_folder: Path to extracted_miis folder")
-        print("  region: Optional - EU, US, JP, or KR (default: EU)")
-        sys.exit(1)
-    
-    save_file = sys.argv[1]
-    extracted_miis_folder = Path(sys.argv[2])
-    region = sys.argv[3] if len(sys.argv) > 3 else "EU"
-    
+        # Auto-detect SaveFile
+        save_dir = script_dir / "SaveFile"
+        if not save_dir.exists():
+            save_dir = script_dir.parent / "SaveFile"
+        save_files = list(save_dir.glob("*.txt")) + list(save_dir.glob("*.sav"))
+        if not save_files:
+            print("Usage: python convert_all_miis.py <save_file> <extracted_miis_folder> [region]")
+            print("  save_file: Path to Tomodachi Life save file")
+            print("  extracted_miis_folder: Path to extracted_miis folder")
+            print("  region: Optional - EU, US, JP, or KR (default: EU)")
+            print("\nAuto-detect failed: place your save in:")
+            print(f"  {save_dir}")
+            sys.exit(1)
+        save_file = str(save_files[0])
+        extracted_miis_folder = script_dir / "extracted_miis"
+        region = "EU"
+    else:
+        save_file = sys.argv[1]
+        extracted_miis_folder = Path(sys.argv[2])
+        region = sys.argv[3] if len(sys.argv) > 3 else "EU"
+
     if not Path(save_file).exists():
         print(f"Error: Save file not found: {save_file}")
         sys.exit(1)
     
     if not extracted_miis_folder.exists():
-        print(f"Error: Extracted Miis folder not found: {extracted_miis_folder}")
-        sys.exit(1)
+        extracted_miis_folder.mkdir(parents=True, exist_ok=True)
     
     # Read summary file
     summary_file = extracted_miis_folder / "_summary.json"
@@ -192,6 +212,7 @@ def main():
     print(f"Successfully converted: {success_count}")
     print(f"Failed: {fail_count}")
     print(f"Total: {summary['total_miis']}")
+
 
 if __name__ == "__main__":
     main()

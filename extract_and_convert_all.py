@@ -8,10 +8,15 @@ import sys
 import subprocess
 from pathlib import Path
 
+
 def main():
     # Get script directory and SaveFile folder
     script_dir = Path(__file__).parent
-    save_file_dir = script_dir.parent / "SaveFile"
+    
+    # Prefer SaveFile in the same directory as this script; fallback to parent for robustness
+    save_file_dir = script_dir / "SaveFile"
+    if not save_file_dir.exists():
+        save_file_dir = script_dir.parent / "SaveFile"
     
     # Look for save file in SaveFile folder
     save_files = list(save_file_dir.glob("*.txt")) + list(save_file_dir.glob("*.sav"))
@@ -103,6 +108,7 @@ def main():
     print("  - face.png - Face render image")
     print("  - body.png - Body render image")
     print("  - _summary.json - Overview of all Miis")
+
 
 if __name__ == "__main__":
     main()
