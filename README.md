@@ -24,5 +24,7 @@ Requirements: Python 3.6+, requests, kaitaistruct, pycryptodome
 MASSIVE THANKS to BrionJV HEYimHeroic!! :)
 
 Check out their projects, which I used, here:
+
 https://github.com/Brionjv/Tomodachi-Life-Save-Editor#
+
 https://github.com/HEYimHeroic/mii2studio#
